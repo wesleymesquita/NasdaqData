@@ -30,6 +30,15 @@ def getClosingPrices(source, ticker, start, end):
     closing_prices  = data['Close']
     return closing_prices
 
+def getOpeningPrices(source, ticker, start, end):
+    """ Get the closing prices for stock with symbol TICKER,
+    from SOURCE ('yahoo' or 'google'), in the period among
+    START and END """ 
+    data = web.DataReader(ticker, source, start, end)
+    opening_prices  = data['Open']
+    return opening_prices
+
+
 ####################
 
 def test_getTicker():
@@ -62,9 +71,25 @@ def test_getClosingPrice():
             return False
     
     return True
+
+def test_getOpeningPrice():
+    opening_prices_yahoo = getOpeningPrices('yahoo', 'MSFT', datetime.datetime(2012, 10, 1),  datetime.datetime(2013, 2, 1))
+    opening_prices_google = getOpeningPrices('google', 'MSFT', datetime.datetime(2012, 10, 1),  datetime.datetime(2013, 2, 1))
     
-print test_getTicker()
-test_getClosingPrice()
+    if len(opening_prices_google) != len(opening_prices_yahoo):
+        return False
+    
+    for date in opening_prices_yahoo.keys():
+        if abs(opening_prices_google[date] - opening_prices_yahoo[date]) > 0.02:
+            print abs(opening_prices_google[date] - opening_prices_yahoo[date]), "Error: getClosingPrice: GOOGLE:", opening_prices_google[date], " YAHOO: ", opening_prices_yahoo[date] 
+            return False
+    
+    return True
+
+def testAll():     
+    print test_getTicker()
+    print test_getClosingPrice()
+    print test_getOpeningPrice()
 
 
-_NDFrameIndexer
+testAll()
