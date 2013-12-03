@@ -1,7 +1,10 @@
 import os
 import datetime
 import pandas.io.data as web
-from pandas.core.indexing import _NDFrameIndexer
+
+from pandas import Series
+from pandas.core.frame import DataFrame
+
 
 def getTickerList( fileLocation ):
     """ Parses the CSV File containing basic info 
@@ -15,6 +18,7 @@ def getTickerList( fileLocation ):
         for line in lines:
             items = line.split(",")
             ticker_list.append(items[0].replace("\"", ""))             
+        csv_file.close()
         return ticker_list
     except IOError as ioe:
         print "Error in getTickerList", ioe 
@@ -22,7 +26,7 @@ def getTickerList( fileLocation ):
         print "Unknown exception in getTickerList"
 
 
-def getClosingPrices(source, ticker, start, end):
+def getClosingPrices(ticker, start, end, source="yahoo"):
     """ Get the closing prices for stock with symbol TICKER,
     from SOURCE ('yahoo' or 'google'), in the period among
     START and END """ 
@@ -30,7 +34,7 @@ def getClosingPrices(source, ticker, start, end):
     closing_prices  = data['Close']
     return closing_prices
 
-def getOpeningPrices(source, ticker, start, end):
+def getOpeningPrices(ticker, start, end, source="yahoo"):
     """ Get the closing prices for stock with symbol TICKER,
     from SOURCE ('yahoo' or 'google'), in the period among
     START and END """ 
@@ -38,7 +42,16 @@ def getOpeningPrices(source, ticker, start, end):
     opening_prices  = data['Open']
     return opening_prices
 
-
+def createClosingPriceDataFrame(tickerList):
+    d = {}
+    for ticker in tickerList[1:10]:
+        try:
+            closing_prices = getClosingPrices(ticker, datetime.datetime(2013, 10, 1),  datetime.datetime(2013, 10, 10) )
+            d[ticker] = closing_prices
+        except:
+            pass
+    df = DataFrame(d)
+    print df
 ####################
 
 def test_getTicker():
@@ -59,8 +72,8 @@ def test_getTicker():
         return True
 
 def test_getClosingPrice():
-    closing_prices_yahoo = getClosingPrices('yahoo', 'MSFT', datetime.datetime(2012, 10, 1),  datetime.datetime(2013, 2, 1))
-    closing_prices_google = getClosingPrices('google', 'MSFT', datetime.datetime(2012, 10, 1),  datetime.datetime(2013, 2, 1))
+    closing_prices_yahoo = getClosingPrices('MSFT', datetime.datetime(2012, 10, 1),  datetime.datetime(2013, 2, 1), 'yahoo')
+    closing_prices_google = getClosingPrices('MSFT', datetime.datetime(2012, 10, 1),  datetime.datetime(2013, 2, 1), 'google')
     
     if len(closing_prices_google) != len(closing_prices_yahoo):
         return False
@@ -73,8 +86,8 @@ def test_getClosingPrice():
     return True
 
 def test_getOpeningPrice():
-    opening_prices_yahoo = getOpeningPrices('yahoo', 'MSFT', datetime.datetime(2012, 10, 1),  datetime.datetime(2013, 2, 1))
-    opening_prices_google = getOpeningPrices('google', 'MSFT', datetime.datetime(2012, 10, 1),  datetime.datetime(2013, 2, 1))
+    opening_prices_yahoo = getOpeningPrices('MSFT', datetime.datetime(2012, 10, 1),  datetime.datetime(2013, 2, 1),'yahoo')
+    opening_prices_google = getOpeningPrices('MSFT', datetime.datetime(2012, 10, 1),  datetime.datetime(2013, 2, 1), 'google')
     
     if len(opening_prices_google) != len(opening_prices_yahoo):
         return False
@@ -90,6 +103,7 @@ def testAll():
     print test_getTicker()
     print test_getClosingPrice()
     print test_getOpeningPrice()
-
+    tickers = getTickerList("companylist.csv");
+    createClosingPriceDataFrame(tickers);
 
 testAll()
