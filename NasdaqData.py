@@ -2,11 +2,10 @@ import os
 import datetime
 import pandas.io.data as web
 
-from pandas import Series
 from pandas.core.frame import DataFrame
 
 
-def getTickerList( fileLocation ):
+def getNasdaqTickerList( fileLocation ):
     """ Parses the CSV File containing basic info 
     about companies listed in NASDAQ. Go to 
     http://www.nasdaq.com/screening/companies-by-industry.aspx?exchange=NASDAQ 
@@ -15,6 +14,11 @@ def getTickerList( fileLocation ):
     try:
         csv_file = open(fileLocation, "r")
         lines = csv_file.readlines();
+        
+        if len(lines) == 0:
+            print "[Error] getTickerList : no tickers! "
+            return False 
+        
         for line in lines:
             items = line.split(",")
             ticker_list.append(items[0].replace("\"", ""))             
@@ -50,8 +54,13 @@ def createClosingPriceDataFrame(tickerList):
             d[ticker] = closing_prices
         except:
             pass
-    df = DataFrame(d)
-    print df
+    return DataFrame(d)
+
+def dataFrameToCSV(dataframe, filename):
+    """ Dumps a dataframe in 'filename'
+    """
+    DataFrame.to_csv(dataframe, filename)
+
 ####################
 
 def test_getTicker():
@@ -62,7 +71,7 @@ def test_getTicker():
     temp_CSV.close()
     
     expected_ticker_list  = ["FCTY", "ADUS"]
-    ticker_list = getTickerList("temp_file.csv")
+    ticker_list = getNasdaqTickerList("temp_file.csv")
     
     os.remove("temp_file.csv")
     
@@ -99,11 +108,20 @@ def test_getOpeningPrice():
     
     return True
 
+def test_dataFrameToCSV():
+    tickers = ['MSFT', 'AAPL', 'BIDU', 'GOOG', 'NFLX']
+    dt = createClosingPriceDataFrame(tickers);
+    dataFrameToCSV(dt, "C:\\Users\\wesley\\Documents\\GitHub\\dataanalysis\\dataframe.txt")
+
 def testAll():     
     print test_getTicker()
     print test_getClosingPrice()
     print test_getOpeningPrice()
-    tickers = getTickerList("companylist.csv");
-    createClosingPriceDataFrame(tickers);
 
-testAll()
+def getClosingPricesTable(): 
+    tickers = getNasdaqTickerList("companylist.csv");
+    dt = createClosingPriceDataFrame(tickers);
+    dataFrameToCSV(dt, "C:\\Users\\wesley\\Documents\\GitHub\\dataanalysis\\dataframe.txt")
+
+getClosingPricesTable()
+
